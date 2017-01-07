@@ -3,6 +3,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 import pylab
+import matplotlib.patches as mpatches
 import seaborn as sn
 
 from scipy.stats import skew
@@ -12,6 +13,7 @@ from keras.layers import Dense, Activation
 from keras.models import Sequential
 from keras.regularizers import l1
 from keras.wrappers.scikit_learn import KerasRegressor
+from keras.optimizers import SGD, Adam
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -525,42 +527,46 @@ print("Test set size:", x_test.shape) # x_test
 x_train = StandardScaler().fit_transform(x_train)
 x_train = np.array(x_train)
 y_train = np.array(y_train)
+x_test = np.array(x_test)
 
-# x_tr, x_val, y_tr, y_val = train_test_split(x_train, y_train, random_state=3)
-# x_tr = np.array(x_tr)
-# x_val = np.array(x_val)
-# y_tr = np.array(y_tr)
-# y_val = np.array(y_val)
-models_history = []
-def create_model():
-    model = Sequential()
-    model.add(Dense(1024, input_dim=x_train.shape[1], W_regularizer=l1(0.001)))
-    model.add(Activation('relu'))
-    model.add(Dense(512))
-    model.add(Activation('relu'))
-    model.add(Dense(1))
-    model.compile(loss = "mean_squared_error", optimizer = "adam")
+x_tr, x_val, y_tr, y_val = train_test_split(x_train, y_train, random_state=3)
+x_tr = np.array(x_tr)
+x_val = np.array(x_val)
+y_tr = np.array(y_tr)
+y_val = np.array(y_val)
 
-    hist = model.fit(x_train, y_train, nb_epoch=40, batch_size=128, validation_split=0.35)
-    models_history['temp'] = hist
+models_history = {}
 
-    plt.figure(figsize=(9,5))
-    plt.title('Overfitted model')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.grid(True)
-    plt1, = plt.plot(models_history['temp']['loss'], label='Training Loss')
-    plt2, = plt.plot(models_history['temp']['val_loss'], label='Validation Loss')
-    fill = plt.fill_between(range(3,40,1), models_history['temp']['loss'][3:], \
-                            models_history['temp']['val_loss'][3:], alpha=0.2, color='cyan')
-    overfit_legend = mpatches.Patch(color='cyan', alpha=0.2, label='Overfitting')
-    handles = [plt1, plt2, overfit_legend]
-    plt.legend(handles, ['Training Loss','Validation Loss','Overfitting'])
-    plt.show()
-    # return model
+model = Sequential()
+model.add(Dense(1024, input_dim=x_train.shape[1], W_regularizer=l1(0.001)))
+model.add(Activation('tanh'))
+model.add(Dense(512))
+model.add(Activation('linear'))
+model.add(Dense(1))
+sgd = SGD(lr=0.0005)
+adam = Adam(lr=0.0001)
+model.compile(loss = "mean_squared_error", optimizer=sgd)
 
-create_model()
+fit = model.fit(x_tr, y_tr, nb_epoch=40, batch_size=300, validation_data = (x_val, y_val))
+hist = fit.history
+nn_pred = model.predict(x_test)
 
+plt.figure(figsize=(9,5))
+plt.title('Overfitted model')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.grid(True)
+plt1 = plt.plot(hist['loss'], label='Training Loss')
+plt2 = plt.plot(hist['val_loss'], label='Validation Loss')
+fill = plt.fill_between(range(3,40,1), hist['loss'][3:], \
+                        hist['val_loss'][3:], alpha=0.2, color='cyan')
+overfit_legend = mpatches.Patch(color='cyan', alpha=0.2, label='Overfitting')
+handles = [plt1, plt2, overfit_legend]
+plt.legend(handles, ['Training Loss','Validation Loss','Overfitting'])
+plt.show()
+
+df_final_pred = pd.DataFrame(np.exp(nn_pred), index=test_df["Id"], columns=["SalePrice"])
+df_final_pred.to_csv('submission_nn.csv', header=True, index_label='Id')
 
 ### Grid Search Setup
 # model = KerasRegressor(build_fn=create_model, verbose=1)
@@ -577,5 +583,3 @@ create_model()
 # for mean_test, stdev, param in zip(means_test, stds, params):
 #     print("Mean Test:%f (STD:%f) with: %r" % (mean_test, stdev, param))
 #     print("Mean Train:%f (STD:%f) with: %r" % (mean_train, stdev, param))
-
-
