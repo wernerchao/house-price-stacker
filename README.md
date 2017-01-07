@@ -18,3 +18,23 @@ Folders:
 model: lasso + ridge + xgb + knn [3 fold cv]
 model_2: lasso + ridge + xgb + knn + rf [3 fold cv]
 model_3: lasso + ridge + xgb + knn + rf [10 fold cv]
+model_4: same as model_3 with diff features
+
+Submissions:
+submission9.csv	0.11509	- Same as previous. Diff set of features
+
+submission8.csv	0.11789	- Same as previous. CV=10
+
+submission7.csv	0.11772	- feature engineering + linear (lasso + ridge + xgb + knn + rf)
+
+submission6.csv	0.11763	- feature engineering + linear(xgb + lasso)
+
+submission4.csv	0.12393	- (xgb + lasso + ridge) with linear regression
+
+submission.csv	0.12754	- Simple lasso.
+
+submission3.csv	0.12162	- XGB + Lasso with LinearRegression
+
+submission.csv	0.12754	- XGB + Lasso
+
+submission.csv	0.12754 - XGBoost single model
