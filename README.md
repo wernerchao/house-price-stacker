@@ -21,6 +21,46 @@ model_3: lasso + ridge + xgb + knn + rf [10 fold cv]
 model_4: same as model_3 with diff features
 
 Submissions:
+submission_nn_1:
+model = Sequential()
+model.add(Dense(1024, input_dim=x_train.shape[1], W_regularizer=l1(0.001)))
+model.add(Activation('tanh'))
+model.add(Dense(512))
+model.add(Activation('linear'))
+model.add(Dense(1))
+sgd = SGD(lr=0.0001)
+model.compile(loss = "mean_squared_error", optimizer=sgd)
+mse_test: 1.31
+
+submission_nn_2:
+model = Sequential()
+model.add(Dense(1024, input_dim=x_train.shape[1], W_regularizer=l1(0.001)))
+model.add(Activation('relu'))
+model.add(Dense(512))
+model.add(Activation('linear'))
+model.add(Dense(1))
+sgd = SGD(lr=0.00005)
+model.compile(loss = "mean_squared_error", optimizer=sgd)
+mse_test: 2.14373
+
+submission_nn_3:
+model = Sequential()
+model.add(Dense(500, input_dim=x_train.shape[1], W_regularizer=l1(0.001)))
+model.add(Activation('relu'))
+model.add(Dense(100))
+model.add(Activation('linear'))
+model.add(Dense(1))
+sgd = SGD(lr=0.00005)
+adam = Adam(lr=0.0001)
+model.compile(loss = "mean_squared_error", optimizer=adam)
+fit = model.fit(x_tr, y_tr, nb_epoch=200, batch_size=300, validation_data = (x_val, y_val))
+hist = fit.history
+nn_pred = model.predict(x_test)
+mse_test: 4.55097
+
+submission_nn_4
+Stacker using NN
+
 submission9.csv	0.11509	- Same as previous. Diff set of features
 
 submission8.csv	0.11789	- Same as previous. CV=10
