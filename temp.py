@@ -107,6 +107,7 @@ X_strint_test = X_strint[len(X1):,:]
 from keras.models import Model
 from keras.layers import Input,Dense,Dropout
 from keras import regularizers
+from sklearn.model_selection import KFold
 
 #--------------------------------------
 # Deep Neural Network
@@ -131,19 +132,34 @@ model1.compile(loss='mse', optimizer='adam', metrics=['mse'])
 enc_l1.compile(loss='mse', optimizer='adam', metrics=['mse'])
 enc_l2.compile(loss='mse', optimizer='adam', metrics=['mse'])
 enc_l3.compile(loss='mse', optimizer='adam', metrics=['mse'])
+
 # train
 min_y1 = np.min(y1)
 max_y1 = np.max(y1)
 scaled_y1 = y1 - min_y1
 scaled_y1 /= max_y1
-model1.fit(X_strint_train[:-50,:], scaled_y1[:-50], nb_epoch=55, batch_size=3, shuffle=True,verbose=2, validation_split=0.25)
-final_pred = model1.predict(X_strint_test)
-final_pred *= max_y1
-final_pred += min_y1
+# model1.fit(X_strint_train, scaled_y1, nb_epoch=55, batch_size=3, shuffle=True,verbose=2, validation_split=0.25)
 
-df_final_pred = pd.DataFrame(np.exp(final_pred), index=test["Id"], columns=["SalePrice"])
-print "\n", df_final_pred.head()
-df_final_pred.to_csv('submission_nn_4.csv', header=True, index_label='Id') # uncomment if want to submit
+# CV
+folds = KFold(n_splits=10)
+for k, (train_index, validation_index) in enumerate(folds.split(X_strint_train)):
+    x_cv_train, x_cv_val = X_strint_train[train_index], X_strint_train[validation_index]
+    y_cv_train, y_cv_val = scaled_y1[train_index], scaled_y1[validation_index]
+
+    model1.fit(x_cv_train, y_cv_train, nb_epoch=55, batch_size=3, shuffle=True,verbose=2, validation_split=0.25)
+    pred = model1.predict(x_cv_val)
+    pred *= max_y1
+    pred += min_y1
+    np.savetxt('nn_pred_fold_{}.txt'.format(k), np.exp(pred))
+    np.savetxt('nn_test_fold_{}.txt'.format(k), y_cv_val)
+
+# predict
+# final_pred = model1.predict(X_strint_test)
+# final_pred *= max_y1
+# final_pred += min_y1
+# df_final_pred = pd.DataFrame(np.exp(final_pred), index=test["Id"], columns=["SalePrice"])
+# print "\n", df_final_pred.head()
+# df_final_pred.to_csv('submission_nn_6.csv', header=True, index_label='Id') # uncomment if want to submit
 
 # get hidden layer activations
 P1 = enc_l1.predict(X_strint)

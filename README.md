@@ -58,8 +58,11 @@ hist = fit.history
 nn_pred = model.predict(x_test)
 mse_test: 4.55097
 
-submission_nn_4
-Stacker using NN
+submission_nn_4:
+Single model nn (used 1410 data sets)
+
+submission_nn_5:
+Single model nn (used all 1460 data sets)
 
 submission9.csv	0.11509	- Same as previous. Diff set of features
 
